@@ -4,20 +4,26 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import SearchJobs from "./components/SearchJobs";
 
 export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
-  const [activeSearch, setActiveSearch] = useState(searchParams.get("q") || "");
+
+  let searchParam = searchParams.get("q");
+
+  // Reset to page 1 when search parameter changes
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [searchParam]);
 
   const fetchJobs = async ({
     page,
     search
   }: {
     page: number;
-    search?: string;
+    search?: string | null;
   }) => {
     const offset = (page - 1) * 10; // Calculate offset for pagination
     let url = `https://remotive.com/api/remote-jobs?limit=10&offset=${offset}`;
@@ -30,8 +36,8 @@ export default function Home() {
   };
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["remoteJobs", currentPage, activeSearch],
-    queryFn: () => fetchJobs({ page: currentPage, search: activeSearch }),
+    queryKey: ["remoteJobs", currentPage, searchParam],
+    queryFn: () => fetchJobs({ page: currentPage, search: searchParam }),
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     gcTime: 10 * 60 * 1000 // Keep in cache for 10 minutes
@@ -48,24 +54,6 @@ export default function Home() {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchTerm) {
-      params.set("q", searchTerm);
-    }
-    router.push(`?${params.toString()}`);
-    setActiveSearch(searchTerm); // Update the active search term
-    setCurrentPage(1); // Reset to first page when searching
-  };
-
-  const clearSearch = () => {
-    setSearchTerm("");
-    setActiveSearch(""); // Clear the active search term
-    router.push("/");
-    setCurrentPage(1);
   };
 
   const renderPageNumbers = () => {
@@ -105,32 +93,7 @@ export default function Home() {
       </Link>
 
       {/* Search Form */}
-      <form onSubmit={handleSearch} className="mb-8">
-        <div className="flex gap-2 max-w-md mx-auto">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search jobs..."
-            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Search
-          </button>
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </form>
+      <SearchJobs />
 
       {/* Jobs Grid */}
       <div className="grid gap-6">

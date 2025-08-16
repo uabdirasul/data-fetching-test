@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchJobs from "./components/SearchJobs";
 
 export default function Home() {
@@ -14,9 +14,9 @@ export default function Home() {
   let searchParam = searchParams.get("q");
 
   // Reset to page 1 when search parameter changes
-  // useEffect(() => {
-  //   setCurrentPage(1);
-  // }, [searchParam]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchParam]);
 
   const fetchJobs = async ({
     page,
